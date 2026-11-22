@@ -14,12 +14,13 @@ ROOT = Path(__file__).resolve().parent.parent / "data" / "bodym"
 SIZE = (256, 192)  # (height, width); masks are 960x720
 
 
+def mask_to_tensor(img):
+    arr = np.array(img.convert("L").resize((SIZE[1], SIZE[0]), Image.BILINEAR))
+    return torch.from_numpy(arr).unsqueeze(0)  # 1,H,W uint8
+
+
 def load_masks(paths):
-    arr = np.stack([
-        np.asarray(Image.open(ROOT / p).convert("L").resize((SIZE[1], SIZE[0]), Image.BILINEAR))
-        for p in paths
-    ])
-    return torch.from_numpy(arr).unsqueeze(1)  # N,1,H,W uint8
+    return torch.stack([mask_to_tensor(Image.open(ROOT / p)) for p in paths])  # N,1,H,W
 
 
 def extra_features(df):

@@ -29,8 +29,8 @@ def _get_model():
     return _model
 
 
-def load_photo(path):
-    img = ImageOps.exif_transpose(Image.open(path)).convert("RGB")
+def prepare_image(img):
+    img = ImageOps.exif_transpose(img).convert("RGB")
     scale = WORK_LONG_SIDE / max(img.size)
     if scale < 1:
         img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
@@ -71,14 +71,17 @@ def clean_mask(prob):
     return mask, warnings
 
 
+def is_cut_off(mask):
+    ys = np.where(mask.any(1))[0]
+    return ys.min() <= 1 or ys.max() >= mask.shape[0] - 2
+
+
 def check_quality(mask):
     ys, xs = np.where(mask)
     warnings = []
     h, w = mask.shape
     if mask.mean() < 0.05:
         warnings.append("person is small in the photo; stand closer or crop")
-    if ys.min() <= 1 or ys.max() >= h - 2:
-        warnings.append("head or feet touch the photo edge; the full body must be visible")
     if xs.min() <= 1 or xs.max() >= w - 2:
         warnings.append("body touches the side edge; arms or body may be cut off")
     return warnings
@@ -96,13 +99,23 @@ def normalize_mask(mask, view):
     return canvas.point(lambda p: 255 if p > 127 else 0)
 
 
-def photo_to_mask(path, view):
-    img = load_photo(path)
-    mask, warnings = clean_mask(person_probability(img))
+def image_to_mask(img, view):
+    """PIL photo -> (BodyM-style PIL mask, warnings). Raises ValueError if no person is found."""
+    mask, warnings = clean_mask(person_probability(prepare_image(img)))
     if not mask.any():
-        raise ValueError(f"{path}: no person found")
+        raise ValueError(f"no person found in the {view} photo")
+    if is_cut_off(mask):
+        # a cropped body gets stretched to full height by normalize_mask, which inflates every width
+        raise ValueError(
+            f"Your head or feet are cut off in the {view} photo. Step back so your whole body, "
+            "head to toes, fits in the frame."
+        )
     warnings += check_quality(mask)
     return normalize_mask(mask, view), warnings
+
+
+def photo_to_mask(path, view):
+    return image_to_mask(Image.open(path), view)
 
 
 def main():

@@ -95,6 +95,37 @@ venv/bin/python scripts/estimate.py --raw \
   --gender male --age 30 --height 178 --weight 80
 ```
 
+### Private web app
+
+One page: gender, age, height, weight, front + side photo -> body fat % with waist and hip. Protected by a
+single shared password read from the `APP_PASSWORD` environment variable (never commit it).
+
+Every submission is saved (no database) in its own folder, `submissions/<timestamp>_<id>/`:
+
+```
+front_original.jpg, side_original.jpg   the uploaded photos
+front_mask.png, side_mask.png           silhouettes fed to the model
+result.json                             inputs, predicted measurements, body fat, warnings
+```
+
+Failed attempts (e.g. no person found) are saved too, with `"status": "error"`. The folder name is shown on the
+results page as the reference. **`submissions/` contains photos of people: it is git-ignored and docker-ignored,
+keep it that way, and tell users their photos are saved (the page says so).**
+
+```bash
+# Local
+APP_PASSWORD='choose-a-long-password' venv/bin/uvicorn server:app --app-dir scripts --port 8000
+
+# Docker (needs models/ present; image is ~2.4 GB, CPU only). Mount a folder so submissions survive restarts.
+docker build -t bodyfat-app .
+docker run -p 8000:8000 -e APP_PASSWORD='choose-a-long-password' \
+  -v "$PWD/submissions:/app/submissions" bodyfat-app
+```
+
+Open http://localhost:8000 and log in with any username and the password. For a public deployment use HTTPS,
+since the password is sent with every request. Building for AWS (x86) from Apple Silicon needs
+`docker buildx build --platform linux/amd64`.
+
 `--raw` saves the generated silhouettes to `outputs/masks/`. Look at them before trusting a result.
 Without `--raw`, `--front`/`--side` must already be BodyM-style masks (white person on black, 3:4 portrait).
 

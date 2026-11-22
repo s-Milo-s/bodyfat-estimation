@@ -44,6 +44,22 @@ Data: 2,424 NHANES adults aged 18-59, 80/20 split (485 held-out test).
 Ridge was nearly as good in CV (2.70 vs 2.64), so the gain comes mostly from adding weight/age/hip, not model complexity.
 Goal later: lower error. 1 point is probably not reachable with tape measurements alone.
 
+### Private web app (built, tested locally; hosting not decided yet)
+- `scripts/server.py` + `web/index.html`: FastAPI, one page, shared password via `APP_PASSWORD` env var (never in the repo).
+- Inputs in inches / pounds (converted to cm / kg server-side). Output: body fat %, waist and hip.
+- Every submission is saved to `submissions/<timestamp>_<id>/` (original photos, silhouettes, `result.json`; failures too). No database. `submissions/` holds photos of people: git-ignored and docker-ignored. The page tells users photos are saved.
+- Dockerfile builds (CPU torch, ~2.4 GB, non-root). Needs `models/` present. Build `--platform linux/amd64` for AWS. AWS CLI has no credentials yet; plan was Lightsail containers (HTTPS built in).
+- Bug found by containerizing: checkpoint was saved from MPS tensors; load with `map_location="cpu"`.
+
+### First real-photo tests (what we learned)
+- Cut-off body (feet out of frame) is now a hard error, not a warning: normalization stretches the visible body to full height, so widths inflate. Measured on BodyM masks: cutting 20% off the bottom gives waist +5 cm, hip +9 cm; at knee level (28%) waist +6.5 cm, hip +11 cm. Knee-up photos would need a new scale source (pose landmarks) and retraining.
+- **Clothing dominates.** Same person, three photo sets: hoodie + arm across chest + feet cut off -> predicted waist 47.5 in; clothed full-body -> 39.0 in; shirtless -> 35.9 in (claimed 32 in, probably a pants size, no tape measurement yet).
+- Verified the model is reading the silhouette, not failing: a simple width/depth ellipse estimate (calibrated on BodyM men, r=0.91, ~4.6 cm typical error) tracks the model within a few cm on every photo set.
+- At waist height the clothed silhouette was ~7 cm wider and ~7 cm deeper than BodyM men with a true 78-85 cm waist.
+- Stage 2 is very sensitive to waist/hip: ~3-5 body-fat points per inch of waist. It is also "steppy" (gradient boosting); Ridge was nearly as good in CV and would be smoother.
+- BodyM subjects wore tight clothing. Silhouette methods cannot see through loose clothing, so real-world accuracy depends on users wearing fitted clothes.
+- Open need: tape-measured waist/hip next to each submission (planned `truth` fields) to measure real error.
+
 ### Findings that matter
 - `train_full.csv` `body_fat_pct` is NOT ground truth. It correlates 0.93 with a BMI formula. Do not train on it.
 - BodyM has no body-fat truth at all. NHANES (DEXA) is the only real body-fat label we have.

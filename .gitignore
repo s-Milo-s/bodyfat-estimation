@@ -12,3 +12,6 @@ models/
 
 # Generated from user photos
 outputs/
+
+# Friends' photos and results: never commit
+submissions/

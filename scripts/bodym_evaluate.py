@@ -23,7 +23,7 @@ def predict(model, ds, device):
 
 
 def main():
-    ck = torch.load(CKPT, weights_only=False)
+    ck = torch.load(CKPT, weights_only=False, map_location="cpu")
     targets, mean, std = ck["targets"], ck["mean"], ck["std"]
     device = get_device()
     model = BodyNet(len(targets), pretrained=False).to(device)

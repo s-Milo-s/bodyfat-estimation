@@ -1,0 +1,11 @@
+venv/
+data/
+outputs/
+logs/
+docs/
+notebooks/
+.git/
+__pycache__/
+*.pyc
+.DS_Store
+submissions/

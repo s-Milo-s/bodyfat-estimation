@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Body fat estimate</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 460px; margin: 0 auto; padding: 20px; color: #111; }
+  h1 { font-size: 1.4rem; }
+  label { display: block; margin-top: 14px; font-weight: 600; font-size: .9rem; }
+  input, select { width: 100%; padding: 10px; margin-top: 4px; font-size: 1rem; box-sizing: border-box; }
+  button { width: 100%; margin-top: 20px; padding: 14px; font-size: 1.05rem; border: 0; border-radius: 8px; background: #111; color: #fff; }
+  button:disabled { background: #888; }
+  .tips { background: #f4f4f4; border-radius: 8px; padding: 10px 14px; font-size: .85rem; }
+  .result { margin-top: 24px; padding: 18px; border-radius: 10px; background: #eef6ff; text-align: center; }
+  .big { font-size: 3rem; font-weight: 700; }
+  .warn { color: #a15c00; font-size: .85rem; margin-top: 8px; }
+  .err { color: #b00020; margin-top: 16px; }
+  .note { color: #666; font-size: .78rem; margin-top: 14px; }
+  .hint { display: block; font-weight: 400; color: #666; font-size: .78rem; margin-top: 3px; }
+</style>
+</head>
+<body>
+<h1>Body fat estimate</h1>
+<div class="tips">
+  <b>Photo tips:</b> your <b>whole body, head to toes, with shoes in the frame</b> (prop the phone ~8 ft away or
+  have someone take it). <b>Fitted clothing</b> (no hoodie or baggy pants). Stand straight with <b>arms relaxed at
+  your sides</b>, a little away from your body, not crossed or on your chest. Rear camera held at waist height,
+  plain wall behind you, only one person in the shot.
+</div>
+<div class="tips" style="margin-top:10px">
+  <b>Privacy:</b> your photos, the silhouettes made from them, and the results are saved privately so we can check
+  how accurate this model is. They are not shared or published. By submitting you agree to this.
+</div>
+
+<form id="f">
+  <label>Gender
+    <select name="gender" required>
+      <option value="">Select…</option><option>male</option><option>female</option>
+    </select>
+  </label>
+  <label>Age (18–59) <input name="age" type="number" step="1" min="18" max="59" required></label>
+  <label>Height (inches) <input name="height_in" type="number" inputmode="decimal" step="0.1" min="47" max="90" required>
+    <span class="hint">Total inches: 5 ft 10 in = 70</span></label>
+  <label>Weight (pounds) <input name="weight_lb" type="number" inputmode="decimal" step="0.1" min="66" max="550" required></label>
+  <label>Front photo <input name="front" type="file" accept="image/*" required></label>
+  <label>Side photo <input name="side" type="file" accept="image/*" required></label>
+  <button id="go" type="submit">Estimate</button>
+</form>
+
+<div id="out"></div>
+
+<script>
+const form = document.getElementById('f'), out = document.getElementById('out'), go = document.getElementById('go');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  go.disabled = true; go.textContent = 'Analyzing… (up to a minute)'; out.innerHTML = '';
+  try {
+    const res = await fetch('/estimate', { method: 'POST', body: new FormData(form) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Invalid input');
+    out.innerHTML = `<div class="result">
+        <div class="big">${Math.round(data.body_fat_pct)}%</div>
+        <div>estimated body fat</div>
+        <p>Waist <b>${data.waist_in} in</b> (${data.waist_cm} cm) &nbsp;·&nbsp;
+           Hip <b>${data.hip_in} in</b> (${data.hip_cm} cm)</p>
+        ${data.warnings.map(w => `<div class="warn">⚠ ${w}</div>`).join('')}
+        <div class="note">Experimental. Typical error is several percentage points; waist and hip are
+        usually within 1–1.5 inches. Not medical advice.<br>Reference: ${data.id}</div></div>`;
+  } catch (err) {
+    out.innerHTML = `<div class="err">${err.message}</div>`;
+  } finally {
+    go.disabled = false; go.textContent = 'Estimate';
+  }
+});
+</script>
+</body>
+</html>
