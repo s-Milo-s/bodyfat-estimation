@@ -1,0 +1,13 @@
+adults=2424 train=1939 test=485
+
+5-fold CV on train (MAE, points): ridge=2.70, gradient_boosting=2.64
+selected: gradient_boosting
+
+Held-out test MAE vs DEXA (percentage points, lower is better)
+  guess avg per sex  5.38
+  RFM formula        3.12
+  trained model      2.57
+  female: RFM 3.61 | model 2.65
+  male: RFM 2.59 | model 2.50
+
+saved /Users/milomarcus/development/bodyfat-estimation/models/bodyfat_nhanes.joblib

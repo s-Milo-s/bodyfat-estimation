@@ -1,0 +1,14 @@
+# Environment
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Datasets (BodyM is CC-BY-NC and must not be redistributed; re-download with aws s3, see docs/)
+data/
+
+# Trained weights (trained on non-commercial BodyM data)
+models/
+
+# Generated from user photos
+outputs/

@@ -1,0 +1,17 @@
+device=mps train=5500 val=634
+epoch  1 train_loss=0.2908 val_mae_mean=2.66cm waist=5.01cm
+epoch  2 train_loss=0.1754 val_mae_mean=2.79cm waist=6.13cm
+epoch  3 train_loss=0.1490 val_mae_mean=2.39cm waist=5.05cm
+epoch  4 train_loss=0.1286 val_mae_mean=2.10cm waist=4.19cm
+epoch  5 train_loss=0.1084 val_mae_mean=1.95cm waist=3.66cm
+epoch  6 train_loss=0.0824 val_mae_mean=1.76cm waist=3.49cm
+epoch  7 train_loss=0.0656 val_mae_mean=1.63cm waist=3.71cm
+epoch  8 train_loss=0.0536 val_mae_mean=1.42cm waist=2.95cm
+epoch  9 train_loss=0.0479 val_mae_mean=1.31cm waist=2.64cm
+epoch 10 train_loss=0.0431 val_mae_mean=1.36cm waist=2.86cm
+epoch 11 train_loss=0.0370 val_mae_mean=1.22cm waist=2.72cm
+epoch 12 train_loss=0.0336 val_mae_mean=1.17cm waist=2.62cm
+epoch 13 train_loss=0.0301 val_mae_mean=1.18cm waist=2.62cm
+epoch 14 train_loss=0.0284 val_mae_mean=1.16cm waist=2.55cm
+epoch 15 train_loss=0.0272 val_mae_mean=1.16cm waist=2.59cm
+best val mean MAE 1.16cm -> /Users/milomarcus/development/bodyfat-estimation/models/bodynet.pt
